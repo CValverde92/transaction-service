@@ -1,0 +1,288 @@
+openapi: 3.0.3
+info:
+  title: Transaction Service API
+  description: Reactive API for banking transactions
+  version: 1.0.0
+
+servers:
+  - url: https://localhost:8080/api
+
+paths:
+  /transactions:
+    post:
+      operationId: createTransaction
+      tags: [ Transactions ]
+      summary: Creates a transaction (deposit, withdrawal, credit payment, etc.).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransactionRequest'
+      responses:
+        '201':
+          description: Transaction created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionResponse'
+    get:
+      operationId: getAllTransactions
+      tags: [ Transactions ]
+      summary: Gets all transactions.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TransactionResponse'
+
+  /transactions/{id}:
+    get:
+      operationId: getTransactionById
+      tags: [ Transactions ]
+      summary: Gets a transaction by ID.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionResponse'
+    put:
+      operationId: updateTransaction
+      tags: [ Transactions ]
+      summary: Updates an existing transaction.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransactionRequest'
+      responses:
+        '200':
+          description: Transaction updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionResponse'
+    delete:
+      operationId: deleteTransaction
+      tags: [ Transactions ]
+      summary: Deletes a transaction.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Transaction deleted (no content).
+
+  /transactions/account/{accountId}:
+    get:
+      operationId: getTransactionsByAccount
+      tags: [ Transactions ]
+      summary: Gets transactions for a bank account.
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TransactionResponse'
+
+  /transactions/credit/{creditId}:
+    get:
+      operationId: getPaymentsByCredit
+      tags: [ Transactions ]
+      summary: Gets payments associated with a credit.
+      parameters:
+        - name: creditId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CreditPaymentResponse'
+
+  /customers/{customerId}/transactions:
+    get:
+      operationId: getCustomerTransactions
+      tags: [ Transactions ]
+      summary: Gets all transactions for a specific customer
+      parameters:
+        - name: customerId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: accountType
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/AccountType'
+        - name: startDate
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TransactionResponse'
+        '400':
+          description: Bad Request
+        '404':
+          description: Customer not found
+
+components:
+  schemas:
+    TransactionRequest:
+      type: object
+      properties:
+        type:
+          $ref: '#/components/schemas/TransactionType'
+        amount:
+          type: number
+          example: 1500.50
+        accountId:
+          type: string
+          example: "acc123"
+        creditId:
+          type: string
+          example: "credit456"
+        customerId:
+          type: string
+          example: "cust789"
+        description:
+          type: string
+          example: "Invoice payment"
+        accountType:
+          $ref: '#/components/schemas/AccountType'
+        customerType:
+          $ref: '#/components/schemas/CustomerType'
+      required: [ type, amount, accountType, customerType ]
+
+    TransactionResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "txn789"
+        type:
+          $ref: '#/components/schemas/TransactionType'
+        amount:
+          type: number
+          example: 1500.50
+        accountId:
+          type: string
+          example: "acc123"
+        creditId:
+          type: string
+          example: "credit456"
+        customerId:
+          type: string
+          example: "cust789"
+        description:
+          type: string
+          example: "Invoice payment"
+        timestamp:
+          type: string
+          format: date-time
+          example: "2025-05-21T10:00:00Z"
+        accountType:
+          $ref: '#/components/schemas/AccountType'
+        customerType:
+          $ref: '#/components/schemas/CustomerType'
+
+    CreditPaymentResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "payment123"
+        creditId:
+          type: string
+          example: "credit456"
+        amount:
+          type: number
+          example: 500.75
+        timestamp:
+          type: string
+          format: date-time
+          example: "2025-05-21T10:00:00Z"
+
+    TransactionType:
+      type: string
+      description: Type of transaction
+      enum:
+        - DEPOSIT
+        - WITHDRAWAL
+        - CREDIT_PAYMENT
+        - CREDIT_CARD_CHARGE
+        - CREDIT_APPLICATION
+        - FEE
+        - TRANSFER_OUT
+      example: DEPOSIT
+
+    AccountType:
+      type: string
+      description: Type of bank account
+      enum:
+        - SAVINGS
+        - CHECKING
+        - FIXED_TERM
+        - CREDIT_CARD
+      example: SAVINGS
+
+    CustomerType:
+      type: string
+      description: Type of customer
+      enum:
+        - PERSONAL
+        - BUSINESS
+      example: PERSONAL

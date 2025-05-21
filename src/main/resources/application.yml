@@ -1,0 +1,36 @@
+server:
+  port: 8083
+  servlet:
+    context-path: /api-v1
+
+spring:
+  application:
+    name: transaction-service
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017/transactiondb
+      auto-index-creation: true
+
+feign:
+  client:
+    config:
+      default:
+        connectTimeout: 5000
+        readTimeout: 5000
+        loggerLevel: basic
+      customer-service:
+        url: http://localhost:8080
+        connectTimeout: 5000
+        readTimeout: 30000
+        loggerLevel: basic
+      account-service:
+        url: http://localhost:8081
+        connectTimeout: 5000
+        readTimeout: 3000
+        loggerLevel: basic
+      credit-service:
+        url: http://localhost:8082
+        connectTimeout: 5000
+        readTimeout: 30000
+        loggerLevel: basic
+
